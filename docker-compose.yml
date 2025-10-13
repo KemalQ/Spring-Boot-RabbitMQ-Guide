@@ -1,0 +1,48 @@
+services:
+  rabbitmq-guide:  #Service name
+    image: rabbitmq:4.1-management
+    container_name: rabbitmq-guide
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  rabbitmq-producer:
+    build: ./rabbitmq-producer
+    container_name: rabbitmq-producer
+    depends_on:
+      rabbitmq-guide:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq-guide
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin
+
+  rabbitmq-consumer:
+    build: ./rabbitmq-consumer
+    container_name: rabbitmq-consumer
+    depends_on:
+      rabbitmq-guide:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq-guide
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin
+
+volumes:
+  rabbitmq_data:

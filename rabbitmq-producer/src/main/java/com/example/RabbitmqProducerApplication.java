@@ -8,5 +8,4 @@ public class RabbitmqProducerApplication {
     public static void main(String[] args) {
         SpringApplication.run(RabbitmqProducerApplication.class, args);
     }
-
 }

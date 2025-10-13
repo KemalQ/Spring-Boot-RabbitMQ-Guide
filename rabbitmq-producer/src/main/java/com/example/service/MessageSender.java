@@ -24,12 +24,12 @@ public class MessageSender {
     }
 
     public void sendOrder(OrderDTO orderDTO){
-        log.info("Orders message has been sent to " + directExchange + " exchange, with " + ordersRoute + "key.");
+        log.info("✅ Orders message has been sent to " + directExchange + " exchange, with " + ordersRoute + "key.");
         rabbitTemplate.convertAndSend(directExchange, ordersRoute, orderDTO);
     }
 
     public void sendNotification(NotificationDTO notificationDTO){
-        log.info("Notifications message has been sent to " + directExchange + " exchange, with " + notificationRoute + "key.");
+        log.info("✅ Notifications message has been sent to " + directExchange + " exchange, with " + notificationRoute + "key.");
         rabbitTemplate.convertAndSend(directExchange, notificationRoute, notificationDTO);
     }
 }
