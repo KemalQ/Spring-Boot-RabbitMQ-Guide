@@ -35,15 +35,3 @@ public class MainController {
         return ResponseEntity.ok().build();
     }
 }
-
-
-/*
-    @PostMapping("/send")
-    public ResponseEntity<?> send(@RequestBody String message){
-        if (message.isBlank()){
-            return new ResponseEntity(HttpStatusCode.valueOf(400));
-        }
-        messageSender.send(message);
-        return new ResponseEntity(HttpStatusCode.valueOf(200));
-    }
- */

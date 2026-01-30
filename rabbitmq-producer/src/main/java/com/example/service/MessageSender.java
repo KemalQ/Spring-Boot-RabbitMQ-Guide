@@ -33,31 +33,3 @@ public class MessageSender {
         rabbitTemplate.convertAndSend(directExchange, notificationRoute, notificationDTO);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//@Value("${queue.name}")
-//private String queueName;
-//
-//private AmqpTemplate amqpTemplate;
-//
-//public MessageSender(AmqpTemplate amqpTemplate){
-//    this.amqpTemplate = amqpTemplate;
-//}
-//
-//public void send(String message){
-//    amqpTemplate.convertAndSend(queueName, message);
-//}

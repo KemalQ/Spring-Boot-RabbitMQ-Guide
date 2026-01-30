@@ -46,58 +46,5 @@ public class RabbitConsumer {
             //TODO Here you can send your message to Dead Letter Queue or retry
             throw e;
         }
-
     }
-
-
 }
-
-
-/*
-    @RabbitListener(queues = "${queue.name}")
-    public void consume(String message){
-        log.info("Received message is- " + message);
-    }
- */
-/*
-    private void processOrder(OrderDTO order){
-        //TODO make business logic layer
-        log.info("Order processing logic executed");
-    }
-
-    private void sendNotification(NotificationDTO notification){
-        //TODO make business logic layer
-        log.info("Notification processing logic executed");
-    }
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    @RabbitListener(queues = ("${queue.name}"))
-//    public void consume(String text){
-//        log.info("message " + text + " received from queue");
-//    }
