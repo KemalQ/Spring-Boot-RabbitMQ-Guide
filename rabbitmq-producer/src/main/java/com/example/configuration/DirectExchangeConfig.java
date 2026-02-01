@@ -30,15 +30,13 @@ public class DirectExchangeConfig {
     private  String notificationRoute;
 
     //EXCHANGE BEAN DECLARATION
-
     @Bean
     public DirectExchange directExchangeMethod(){
-        return new DirectExchange(directExchange, true, true);
+        return new DirectExchange(directExchange, true, false);
     }
 
 
     //QUEUES
-
     @Bean
     public Queue ordersQueue(){
         return new Queue(ordersQueue, true);
@@ -50,7 +48,6 @@ public class DirectExchangeConfig {
 
 
     //BINDINGS
-
     @Bean
     public Binding ordersBinding(){
         return BindingBuilder.bind(ordersQueue())

@@ -27,15 +27,13 @@ public class TopicExchangeConfig {
     private String systemErrorQueue;
 
     //EXCHANGE BEAN DECLARATION
-
     @Bean
     public TopicExchange topicExchangeMethod(){
-        return new TopicExchange(topicExchange, true, true);
+        return new TopicExchange(topicExchange, true, false);
     }
 
 
     //QUEUES
-
     @Bean
     public Queue userSignUpQueue(){
         return new Queue(userSignUpQueue, true);
@@ -51,7 +49,6 @@ public class TopicExchangeConfig {
 
 
     //BINDINGS
-
     @Bean
     public Binding userSignUpBinding(){
         return BindingBuilder.bind(userSignUpQueue()).to(topicExchangeMethod()).with("user.#");
@@ -66,9 +63,4 @@ public class TopicExchangeConfig {
     public Binding systemErrorBinding(){
         return BindingBuilder.bind(systemErrorQueue()).to(topicExchangeMethod()).with("error.#");
     }
-
-//    @Bean
-//    public Binding emailBinding(){
-//        return BindingBuilder.bind(emailQueue()).to(fanoutExchangeMethod());
-//    }
 }

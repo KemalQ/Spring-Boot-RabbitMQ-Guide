@@ -26,15 +26,13 @@ public class HeaderExchangeConfig {
 
 
     //EXCHANGE BEAN DECLARATION
-
     @Bean
     public HeadersExchange headersExchange(){
-        return new HeadersExchange(headersExchange, true, true);
+        return new HeadersExchange(headersExchange, true, false);
     }
 
 
     //QUEUES
-
     @Bean
     public Queue highPriorityQueue(){
         return new Queue(highPriorityQueue, true);
@@ -46,7 +44,6 @@ public class HeaderExchangeConfig {
     }
 
     //BINDINGS
-
     @Bean
     public Binding priorityHighBindingHeaders(Queue highPriorityQueue, HeadersExchange headersExchange){
         return BindingBuilder.bind(highPriorityQueue)

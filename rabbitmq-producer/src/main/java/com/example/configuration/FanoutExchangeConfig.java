@@ -28,15 +28,13 @@ public class FanoutExchangeConfig {
 
 
     //EXCHANGE BEAN DECLARATION
-
     @Bean
     public FanoutExchange fanoutExchangeMethod(){
-        return new FanoutExchange(fanoutExchange, true, true);
+        return new FanoutExchange(fanoutExchange, true, false);
     }
 
 
     //QUEUES
-
     @Bean
     public Queue emailQueue(){
         return new Queue(emailQueue, true);
@@ -54,7 +52,6 @@ public class FanoutExchangeConfig {
 
 
     //BINDING BEAN DECLARATION
-
     @Bean
     public Binding emailBinding(){
         return BindingBuilder.bind(emailQueue()).to(fanoutExchangeMethod());
