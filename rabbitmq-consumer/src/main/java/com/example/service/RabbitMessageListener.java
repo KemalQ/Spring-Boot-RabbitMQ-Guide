@@ -3,6 +3,7 @@ package com.example.service;
 import com.example.configuration.MessageValidator;
 import com.example.dto.NotificationDTO;
 import com.example.dto.OrderDTO;
+import com.example.dto.SystemEventDTO;
 import com.example.dto.UserEventDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -105,7 +106,7 @@ public class RabbitMessageListener {
 
     //  TOPIC
     @RabbitListener(queues = "${user.signup.queue}")
-    public void consumeSignUpQueue(UserEventDTO userEvent){
+    public void consumeUserSignUpQueue(UserEventDTO userEvent){
         messageValidator.validateUserEvent(userEvent);
 
         try{
@@ -117,6 +118,42 @@ public class RabbitMessageListener {
 
         }catch (Exception e){
             log.error("❌ Failed to process notification: {}", userEvent, e);
+            //TODO Here you can send your message to Dead Letter Queue or retry
+            throw e;
+        }
+    }
+
+    @RabbitListener(queues = "${user.login.queue}")
+    public void consumeUserLoginQueue(UserEventDTO userEvent){
+        messageValidator.validateUserEvent(userEvent);
+
+        try{
+            log.info("✅ Received message is: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
+                    userEvent.getEventType(), userEvent.getUserId(), userEvent.getUsername(),
+                    userEvent.getEmail(), userEvent.getOccurredAt(), userEvent.getIpAddress());
+
+            //TODO you can customize processLoginQueue(UserEventDTO userEvent) for business logic here
+
+        }catch (Exception e){
+            log.error("❌ Failed to process notification: {}", userEvent, e);
+            //TODO Here you can send your message to Dead Letter Queue or retry
+            throw e;
+        }
+    }
+
+    @RabbitListener(queues = "${system.error.queue}")
+    public void consumeSystemErrorQueue(SystemEventDTO systemEvent){
+        messageValidator.validateSystemError(systemEvent);
+
+        try{
+            log.info("✅ Received message is: component={}, severity={}, errorCode={}, message={}, createdAt={}, metadata={}",
+                    systemEvent.getComponent(), systemEvent.getSeverity(), systemEvent.getErrorCode(),
+                    systemEvent.getMessage(), systemEvent.getCreatedAt(), systemEvent.getMetadata());
+
+            //TODO you can customize processLoginQueue(SystemEventDTO systemEvent) for business logic here
+
+        }catch (Exception e){
+            log.error("❌ Failed to process notification: {}", systemEvent, e);
             //TODO Here you can send your message to Dead Letter Queue or retry
             throw e;
         }

@@ -2,6 +2,7 @@ package com.example.configuration;
 
 import com.example.dto.NotificationDTO;
 import com.example.dto.OrderDTO;
+import com.example.dto.SystemEventDTO;
 import com.example.dto.UserEventDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -40,7 +41,20 @@ public class MessageValidator {
                 userEvent.getUsername().isEmpty() || userEvent.getEmail().isEmpty() ||
                 userEvent.getOccurredAt() == null || userEvent.getIpAddress().isEmpty()){
             log.error("✅❌Invalid User Event data: {}", userEvent);
-            throw new IllegalArgumentException("Invalid notification data");
+            throw new IllegalArgumentException("Invalid user event data");
+        }
+    }
+
+    public void validateSystemError(SystemEventDTO systemEvent) {
+        if (systemEvent == null){
+            log.error("✅❌Received null System Event");
+            return;
+        }
+        if (systemEvent.getComponent() == null || systemEvent.getErrorCode() == null ||
+                systemEvent.getMessage() == null || systemEvent.getSeverity() == null ||
+        systemEvent.getCreatedAt() == null || systemEvent.getMetadata() == null){
+            log.error("✅❌Invalid User Event data: {}", systemEvent);
+            throw new IllegalArgumentException("Invalid system event data");
         }
     }
 }
