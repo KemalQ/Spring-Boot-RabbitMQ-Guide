@@ -2,18 +2,18 @@ package com.example.controller;
 
 import com.example.dto.NotificationDTO;
 import com.example.dto.OrderDTO;
-import com.example.service.MessageSender;
+import com.example.service.RabbitMessagePublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class MainController {
+public class DirectController {
 
-    private MessageSender messageSender;
+    private RabbitMessagePublisher messageSender;
 
-    public MainController(MessageSender messageSender){
+    public DirectController(RabbitMessagePublisher messageSender){
         this.messageSender = messageSender;
     }
 

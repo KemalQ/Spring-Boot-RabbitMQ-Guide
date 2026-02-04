@@ -14,11 +14,27 @@ import java.util.Properties;
 @Component
 @Slf4j
 public class RabbitInfrastructureInitializer {
+    //  DIRECT
     @Value("${orders.queue}")
     private String ordersQueue;
-
     @Value("${notification.queue}")
     private String notificationQueue;
+
+    //  FANOUT
+    @Value("${email.queue}")
+    private String emailQueue;
+    @Value("${sms.queue}")
+    private String smsQueue;
+    @Value("${push.queue}")
+    private String pushQueue;
+
+    //  TOPIC
+    @Value("${user.signup.queue}")
+    private String userSignUpQueue;
+    @Value("${user.login.queue}")
+    private String userLoginQueue;
+    @Value("${system.error.queue}")
+    private String systemErrorQueue;
 
     private final RabbitAdmin rabbitAdmin;
 
@@ -42,7 +58,9 @@ public class RabbitInfrastructureInitializer {
         }
     }
     private void validateQueueExist(){
-        List<String> requiredQueue = Arrays.asList(ordersQueue, notificationQueue);
+        List<String> requiredQueue = Arrays.asList(ordersQueue, notificationQueue,
+                emailQueue, smsQueue, pushQueue,
+                userSignUpQueue, userLoginQueue, systemErrorQueue);
 
         for (String queueName : requiredQueue){
             Properties properties = rabbitAdmin.getQueueProperties(queueName);

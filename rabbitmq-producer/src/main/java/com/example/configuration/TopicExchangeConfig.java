@@ -14,15 +14,18 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 public class TopicExchangeConfig {
-    //TOPIC
+    //EXCHANGE
 
     @Value("${topic.exchange}")
     private String topicExchange;
 
+    //QUEUE
     @Value("${user.signup.queue}")
     private String userSignUpQueue;
+
     @Value("${user.login.queue}")
     private String userLoginQueue;
+
     @Value("${system.error.queue}")
     private String systemErrorQueue;
 
@@ -51,16 +54,22 @@ public class TopicExchangeConfig {
     //BINDINGS
     @Bean
     public Binding userSignUpBinding(){
-        return BindingBuilder.bind(userSignUpQueue()).to(topicExchangeMethod()).with("user.#");
+        return BindingBuilder.bind(userSignUpQueue()).
+                to(topicExchangeMethod()).
+                with("user.signup.#");
     }
 
     @Bean
     public Binding userLoginBinding(){
-        return BindingBuilder.bind(userLoginQueue()).to(topicExchangeMethod()).with("login.#");
+        return BindingBuilder.bind(userLoginQueue()).
+                to(topicExchangeMethod()).
+                with("user.login.#");
     }
 
     @Bean
     public Binding systemErrorBinding(){
-        return BindingBuilder.bind(systemErrorQueue()).to(topicExchangeMethod()).with("error.#");
+        return BindingBuilder.bind(systemErrorQueue()).
+                to(topicExchangeMethod()).
+                with("system.error.#");
     }
 }
