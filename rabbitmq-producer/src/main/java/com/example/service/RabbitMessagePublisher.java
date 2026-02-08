@@ -1,16 +1,11 @@
 package com.example.service;
 
-import com.example.dto.NotificationDTO;
-import com.example.dto.OrderDTO;
-import com.example.dto.SystemEventDTO;
-import com.example.dto.UserEventDTO;
+import com.example.dto.*;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.xml.transform.sax.SAXResult;
 
 @Slf4j
 @Service
@@ -19,6 +14,7 @@ public class RabbitMessagePublisher {
     private final String directExchange;
     private final String fanoutExchange;
     private final String topicExchange;
+    private final String headersExchange;
 
     //  DIRECT
     @Value("${orders.route}")
@@ -34,14 +30,21 @@ public class RabbitMessagePublisher {
     @Value("${system.error.route}")
     private String systemError;
 
+    //HEADERS
+    @Value("${priority.high.queue}")
+    private String priorityHighQueue;
+
+
     public RabbitMessagePublisher(RabbitTemplate rabbitTemplate,
                                   @Value("${direct.exchange}") String directExchange,
                                   @Value("${fanout.exchange}") String fanoutExchange,
-                                  @Value("${topic.exchange}") String topicExchange){
+                                  @Value("${topic.exchange}") String topicExchange,
+                                  @Value("${headers.exchange}") String headersExchange){
         this.directExchange = directExchange;
         this.rabbitTemplate = rabbitTemplate;
         this.fanoutExchange = fanoutExchange;
         this.topicExchange = topicExchange;
+        this.headersExchange = headersExchange;
     }
 
     //  DIRECT
@@ -76,4 +79,24 @@ public class RabbitMessagePublisher {
         log.info("✅ User System Error message has been sent to " + topicExchange + " exchange");
         rabbitTemplate.convertAndSend(topicExchange, systemError, systemEvent);
     }
+
+    public void sendPriorityMessage(@Valid PriorityMessageDTO priorityMessage, @Valid String priority) {
+        rabbitTemplate.convertAndSend(headersExchange, "",  priorityMessage,
+                message -> {
+                    message.getMessageProperties().setHeader("priority", priority);
+                    log.info("✅ {} Priority Message message has been sent to {}", priority, headersExchange);
+                    return message;
+                });
+    }
+
+//    public void sendMediumPriorityMessage(@Valid PriorityMessageDTO priorityMessage, boolean urgent) {
+//        rabbitTemplate.convertAndSend(headersExchange,"", priorityMessage,
+//                message -> {
+//                    message.getMessageProperties().setHeader("priority", "medium");
+//                    message.getMessageProperties().setHeader("urgent", urgent);
+//                    log.info("✅ Medium Priority Message message has been sent to {}", headersExchange);
+//                    return message;
+//                }
+//        );
+//    }
 }

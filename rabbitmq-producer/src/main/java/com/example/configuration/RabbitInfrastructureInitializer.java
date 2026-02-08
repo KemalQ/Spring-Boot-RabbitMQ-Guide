@@ -36,6 +36,14 @@ public class RabbitInfrastructureInitializer {
     @Value("${system.error.queue}")
     private String systemErrorQueue;
 
+    //  HEADERS
+    @Value("${priority.high.queue = priority.high.queue}")
+    private String priorityHighQueue;
+    @Value("${priority.low.queue = priority.low.queue}")
+    private String priorityLowQueue;
+    @Value("${priority.medium.queue = priority.medium.queue}")
+    private String priorityMediumQueue;
+
     private final RabbitAdmin rabbitAdmin;
 
     public RabbitInfrastructureInitializer(RabbitAdmin rabbitAdmin){
@@ -60,7 +68,8 @@ public class RabbitInfrastructureInitializer {
     private void validateQueueExist(){
         List<String> requiredQueue = Arrays.asList(ordersQueue, notificationQueue,
                 emailQueue, smsQueue, pushQueue,
-                userSignUpQueue, userLoginQueue, systemErrorQueue);
+                userSignUpQueue, userLoginQueue, systemErrorQueue,
+                priorityHighQueue, priorityLowQueue, priorityMediumQueue);
 
         for (String queueName : requiredQueue){
             Properties properties = rabbitAdmin.getQueueProperties(queueName);

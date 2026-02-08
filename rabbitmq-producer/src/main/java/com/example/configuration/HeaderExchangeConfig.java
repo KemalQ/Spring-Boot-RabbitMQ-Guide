@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @Setter
 @Configuration
@@ -23,6 +26,8 @@ public class HeaderExchangeConfig {
     private String highPriorityQueue;
     @Value("${priority.low.queue}")
     private String lowPriorityQueue;
+    @Value("${priority.medium.queue}")
+    private String mediumPriorityQueue;
 
 
     //EXCHANGE BEAN DECLARATION
@@ -39,6 +44,11 @@ public class HeaderExchangeConfig {
     }
 
     @Bean
+    public Queue mediumPriorityQueue(){
+        return new Queue(mediumPriorityQueue, true);
+    }
+
+    @Bean
     public Queue lowPriorityQueue(){
         return new Queue(lowPriorityQueue, true);
     }
@@ -52,6 +62,20 @@ public class HeaderExchangeConfig {
                 .matches("high");
     }
 
+    @Bean
+    public Binding mediumPriorityBinding(
+            Queue mediumPriorityQueue,
+            HeadersExchange headersExchange
+    ) {
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("priority", "medium");
+        headers.put("urgent", false);
+
+        return BindingBuilder.bind(mediumPriorityQueue)
+                .to(headersExchange)
+                .whereAll(headers)  // TODO check this
+                .match();
+    }
 
     @Bean
     public Binding priorityLowBinding(Queue lowPriorityQueue, HeadersExchange headersExchange){

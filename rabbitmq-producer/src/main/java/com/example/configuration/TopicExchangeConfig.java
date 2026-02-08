@@ -56,14 +56,14 @@ public class TopicExchangeConfig {
     public Binding userSignUpBinding(){
         return BindingBuilder.bind(userSignUpQueue()).
                 to(topicExchangeMethod()).
-                with("user.signup.#");
+                with("user.signup.*");
     }
 
     @Bean
     public Binding userLoginBinding(){
         return BindingBuilder.bind(userLoginQueue()).
                 to(topicExchangeMethod()).
-                with("user.login.#");
+                with("user.login.*");
     }
 
     @Bean
