@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dto.NotificationDTO;
 import com.example.dto.OrderDTO;
 import com.example.service.RabbitMessagePublisher;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ public class DirectController {
     }
 
     @PostMapping("/sendOrder")
-    public ResponseEntity<?> send(@RequestBody OrderDTO order){
+    public ResponseEntity<?> send(@Valid @RequestBody OrderDTO order){
         if (order == null){
             return ResponseEntity.badRequest().build();
         }
@@ -27,7 +28,7 @@ public class DirectController {
     }
 
     @PostMapping("/sendNotification")
-    public ResponseEntity<?> send(@RequestBody NotificationDTO notification){
+    public ResponseEntity<?> send(@Valid @RequestBody NotificationDTO notification){
         if (notification == null){
             return ResponseEntity.badRequest().build();
         }

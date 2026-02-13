@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Slf4j
 @Service
+@Validated
 public class RabbitMessagePublisher {
     private final RabbitTemplate rabbitTemplate;
     private final String directExchange;
@@ -31,8 +33,8 @@ public class RabbitMessagePublisher {
     private String systemError;
 
     //HEADERS
-    @Value("${priority.high.queue}")
-    private String priorityHighQueue;
+//    @Value("${priority.high.queue}")
+//    private String priorityHighQueue;
 
 
     public RabbitMessagePublisher(RabbitTemplate rabbitTemplate,
@@ -48,39 +50,41 @@ public class RabbitMessagePublisher {
     }
 
     //  DIRECT
-    public void sendOrder(OrderDTO orderDTO){
-        log.info("✅ Orders message has been sent to " + directExchange + " exchange, with " + ordersRoute + "key.");
+    public void sendOrder(@Valid OrderDTO orderDTO){
+        log.info("✅ Orders message has been sent to {} exchange, with {} key.",
+                directExchange, ordersRoute);
         rabbitTemplate.convertAndSend(directExchange, ordersRoute, orderDTO);
     }
 
-    public void sendNotification(NotificationDTO notificationDTO){
-        log.info("✅ Notifications message has been sent to " + directExchange + " exchange, with " + notificationRoute + "key.");
+    public void sendNotification(@Valid NotificationDTO notificationDTO){
+        log.info("✅ Notifications message has been sent to {} exchange, with {} key.",
+                directExchange, notificationRoute);
         rabbitTemplate.convertAndSend(directExchange, notificationRoute, notificationDTO);
     }
 
     //  FANOUT
     public void sendFanoutNotification(@Valid NotificationDTO notification) {
-        log.info("✅ Notifications message has been sent to " + fanoutExchange + " exchange");
+        log.info("✅ Notifications message has been sent to {} exchange", fanoutExchange);
         rabbitTemplate.convertAndSend(fanoutExchange, "", notification);
     }
 
     //  TOPIC
     public void sendUserSignup(@Valid UserEventDTO userEvent){
-        log.info("✅ User Event message has been sent to " + topicExchange + " exchange");
+        log.info("✅ User Event message has been sent to {} exchange", topicExchange);
         rabbitTemplate.convertAndSend(topicExchange, userSignup, userEvent);
     }
 
     public void sendUserLogin(@Valid UserEventDTO userEvent){
-        log.info("✅ User SignUp message has been sent to " + topicExchange + " exchange");
+        log.info("✅ User SignUp message has been sent to {} exchange", topicExchange);
         rabbitTemplate.convertAndSend(topicExchange, userLogin, userEvent);
     }
 
     public void sendSystemError(@Valid SystemEventDTO systemEvent){
-        log.info("✅ User System Error message has been sent to " + topicExchange + " exchange");
+        log.info("✅ User System Error message has been sent to {} exchange", topicExchange);
         rabbitTemplate.convertAndSend(topicExchange, systemError, systemEvent);
     }
 
-    public void sendPriorityMessage(@Valid PriorityMessageDTO priorityMessage, @Valid String priority) {
+    public void sendPriorityMessage(@Valid PriorityMessageDTO priorityMessage, String priority) {
         rabbitTemplate.convertAndSend(headersExchange, "",  priorityMessage,
                 message -> {
                     message.getMessageProperties().setHeader("priority", priority);

@@ -37,11 +37,11 @@ public class RabbitInfrastructureInitializer {
     private String systemErrorQueue;
 
     //  HEADERS
-    @Value("${priority.high.queue = priority.high.queue}")
+    @Value("${priority.high.queue}")
     private String priorityHighQueue;
-    @Value("${priority.low.queue = priority.low.queue}")
+    @Value("${priority.low.queue}")
     private String priorityLowQueue;
-    @Value("${priority.medium.queue = priority.medium.queue}")
+    @Value("${priority.medium.queue}")
     private String priorityMediumQueue;
 
     private final RabbitAdmin rabbitAdmin;

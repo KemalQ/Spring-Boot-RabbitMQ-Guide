@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.dto.PriorityMessageDTO;
 import com.example.service.RabbitMessagePublisher;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class HeadersController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendPriorityMessage(@RequestBody PriorityMessageDTO priorityMessage,
+    public ResponseEntity<Void> sendPriorityMessage(@Valid @RequestBody PriorityMessageDTO priorityMessage,
                                                     @RequestParam String priority){
         if (!Arrays.asList("high", "low").contains(priority)) {
             throw new IllegalArgumentException("Invalid priority. Must be 'high' or 'low'");

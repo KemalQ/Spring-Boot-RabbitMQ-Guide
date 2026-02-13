@@ -73,7 +73,7 @@ public class HeaderExchangeConfig {
 
         return BindingBuilder.bind(mediumPriorityQueue)
                 .to(headersExchange)
-                .whereAll(headers)  // TODO check this
+                .whereAll(headers)
                 .match();
     }
 
