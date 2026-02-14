@@ -25,7 +25,7 @@ public class RabbitMessageListener {
         try{
             messageValidator.validateOrder(order);
 
-            log.info("✅ Received message is: product={}, quantity={}", order.getProduct(), order.getQuantity());
+            log.info("✅ orders.queue message: product={}, quantity={}", order.getProduct(), order.getQuantity());
 
             // ***
 
@@ -44,7 +44,7 @@ public class RabbitMessageListener {
     public void consumeNotification(NotificationDTO notification){
         try{
             messageValidator.validateNotification(notification);
-            log.info("✅ Received message is: userId={}, notification={}", notification.getUserId(), notification.getMessage());
+            log.info("✅ notification.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
 
             // ***
 
@@ -65,7 +65,7 @@ public class RabbitMessageListener {
     public void consumeEmailNotification(NotificationDTO notification){
         try{
             messageValidator.validateNotification(notification);
-            log.info("✅ Received message is: userId={}, notification={}", notification.getUserId(), notification.getMessage());
+            log.info("✅ email.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
 
             // ***
 
@@ -84,7 +84,7 @@ public class RabbitMessageListener {
     public void consumeSmsNotification(NotificationDTO notification){
         try{
             messageValidator.validateNotification(notification);
-            log.info("✅ Received message is: userId={}, notification={}", notification.getUserId(), notification.getMessage());
+            log.info("✅ sms.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
 
             // ***
 
@@ -103,7 +103,7 @@ public class RabbitMessageListener {
     public void consumePushNotification(NotificationDTO notification){
         try{
             messageValidator.validateNotification(notification);
-            log.info("✅ Received message is: userId={}, notification={}", notification.getUserId(), notification.getMessage());
+            log.info("✅ push.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
 
             // ***
 
@@ -124,7 +124,7 @@ public class RabbitMessageListener {
     public void consumeUserSignUpQueue(UserEventDTO userEvent){
         try{
             messageValidator.validateUserEvent(userEvent);
-            log.info("✅ Received message is: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
+            log.info("✅ user.signup.queue message: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
                     userEvent.getEventType(), userEvent.getUserId(), userEvent.getUsername(),
                     userEvent.getEmail(), userEvent.getOccurredAt(), userEvent.getIpAddress());
 
@@ -145,7 +145,7 @@ public class RabbitMessageListener {
     public void consumeUserLoginQueue(UserEventDTO userEvent){
         try{
             messageValidator.validateUserEvent(userEvent);
-            log.info("✅ Received message is: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
+            log.info("✅ user.login.queue message: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
                     userEvent.getEventType(), userEvent.getUserId(), userEvent.getUsername(),
                     userEvent.getEmail(), userEvent.getOccurredAt(), userEvent.getIpAddress());
 
@@ -166,7 +166,7 @@ public class RabbitMessageListener {
     public void consumeSystemErrorQueue(SystemEventDTO systemEvent){
         try{
             messageValidator.validateSystemErrorEvent(systemEvent);
-            log.info("✅ Received message is: component={}, severity={}, errorCode={}, message={}, createdAt={}, metadata={}",
+            log.info("✅ system.error.queue message: component={}, severity={}, errorCode={}, message={}, createdAt={}, metadata={}",
                     systemEvent.getComponent(), systemEvent.getSeverity(), systemEvent.getErrorCode(),
                     systemEvent.getMessage(), systemEvent.getCreatedAt(), systemEvent.getMetadata());
 
@@ -188,7 +188,7 @@ public class RabbitMessageListener {
     public void consumeHighPriorityMessage(PriorityMessageDTO message) {
         try{
             messageValidator.validatePriorityMessage(message);
-            log.info("🔴 HIGH PRIORITY: {}", message);
+            log.info("🔴 priority.high.queue message: {}", message);
             // ***
 
         }catch (IllegalArgumentException e) {
@@ -207,7 +207,7 @@ public class RabbitMessageListener {
     public void consumeLowPriorityMessage(PriorityMessageDTO message) {
         try{
             messageValidator.validatePriorityMessage(message);
-            log.info("🟢 LOW PRIORITY: {}", message);
+            log.info("🟢 priority.low.queue message: {}", message);
             // ***
         }catch (IllegalArgumentException e) {
             log.error("❌ Failed to process low priority message: {}", message, e);
