@@ -41,8 +41,6 @@ public class RabbitInfrastructureInitializer {
     private String priorityHighQueue;
     @Value("${priority.low.queue}")
     private String priorityLowQueue;
-    @Value("${priority.medium.queue}")
-    private String priorityMediumQueue;
 
     private final RabbitAdmin rabbitAdmin;
 
@@ -69,7 +67,7 @@ public class RabbitInfrastructureInitializer {
         List<String> requiredQueue = Arrays.asList(ordersQueue, notificationQueue,
                 emailQueue, smsQueue, pushQueue,
                 userSignUpQueue, userLoginQueue, systemErrorQueue,
-                priorityHighQueue, priorityLowQueue, priorityMediumQueue);
+                priorityHighQueue, priorityLowQueue);
 
         for (String queueName : requiredQueue){
             Properties properties = rabbitAdmin.getQueueProperties(queueName);

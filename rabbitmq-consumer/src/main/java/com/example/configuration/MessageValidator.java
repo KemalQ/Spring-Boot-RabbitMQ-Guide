@@ -20,7 +20,7 @@ public class MessageValidator {
 
     public <T> void validate(T object, String objectType){
         if (object == null){
-            log.error("✅❌Received null {}", objectType);
+            log.error("❌Received null {}", objectType);
             throw new IllegalArgumentException(objectType + "cannot be null");
         }
 
@@ -30,7 +30,7 @@ public class MessageValidator {
             String errors = violations.stream()
                     .map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining(", "));
-            log.error("✅❌Validation failed for {}: {}", objectType, errors);
+            log.error("❌Validation failed for {}: {}", objectType, errors);
             throw new IllegalArgumentException("Invalid " + objectType + ": " + errors);
         }
         log.debug("✅ {} validation passed", objectType);

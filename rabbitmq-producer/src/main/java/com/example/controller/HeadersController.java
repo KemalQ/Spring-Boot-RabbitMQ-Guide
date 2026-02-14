@@ -26,14 +26,4 @@ public class HeadersController {
         messageSender.sendPriorityMessage(priorityMessage, priority);
         return ResponseEntity.ok().build();
     }
-
-//    @PostMapping("/send")
-//    public ResponseEntity<Void> sendMediumPriorityMessage(@RequestBody PriorityMessageDTO priorityMessage,
-//                                                    @RequestParam Boolean urgent){
-//        if (!Arrays.asList("high", "low").contains(urgent)) {
-//            throw new IllegalArgumentException("Invalid priority. Must be 'high' or 'low'");
-//        }
-//        messageSender.sendMediumPriorityMessage(priorityMessage, urgent);
-//        return ResponseEntity.ok().build();
-//    }
 }

@@ -25,6 +25,32 @@ public class RabbitConfiguration {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter){
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter);
+
+        // CONFIRMATION-RETURN
+
+        rabbitTemplate.setMandatory(true); // for return
+
+        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+            if (ack) {
+                log.info("✅ CONFIRM: Message successfully received by RabbitMQ broker");
+            } else {
+                log.error("❌ REJECT: Message rejected by broker. Reason: {}", cause);
+                // TODO: Implement retry logic or send to DLQ
+            }
+        });
+
+        rabbitTemplate.setReturnsCallback(returned -> {
+            log.error(
+                    "❌ PUBLISH RETURNED Exchange={} routingKey={} replyCode={} replyText={}",
+                    returned.getExchange(),
+                    returned.getRoutingKey(),
+                    returned.getReplyCode(),
+                    returned.getReplyText()
+            );
+            // OPTIONALLY: alert + save for manual review
+
+        });
+
         return rabbitTemplate;
     }
 

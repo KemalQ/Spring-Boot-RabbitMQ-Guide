@@ -3,10 +3,13 @@ package com.example.service;
 import com.example.dto.*;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -50,57 +53,69 @@ public class RabbitMessagePublisher {
     }
 
     //  DIRECT
-    public void sendOrder(@Valid OrderDTO orderDTO){
-        log.info("✅ Orders message has been sent to {} exchange, with {} key.",
-                directExchange, ordersRoute);
-        rabbitTemplate.convertAndSend(directExchange, ordersRoute, orderDTO);
+    public void sendOrder(@Valid OrderDTO order){
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ Orders message sending to {} exchange, with {} key, with id: {}",
+                directExchange, ordersRoute, correlationData.getId());
+        rabbitTemplate.convertAndSend(directExchange, ordersRoute, order, correlationData);
     }
 
     public void sendNotification(@Valid NotificationDTO notificationDTO){
-        log.info("✅ Notifications message has been sent to {} exchange, with {} key.",
-                directExchange, notificationRoute);
-        rabbitTemplate.convertAndSend(directExchange, notificationRoute, notificationDTO);
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ Notifications message sending to {} exchange, with {} key, with id: {}",
+                directExchange, notificationRoute, correlationData.getId());
+        rabbitTemplate.convertAndSend(directExchange, notificationRoute, notificationDTO, correlationData);
     }
 
     //  FANOUT
     public void sendFanoutNotification(@Valid NotificationDTO notification) {
-        log.info("✅ Notifications message has been sent to {} exchange", fanoutExchange);
-        rabbitTemplate.convertAndSend(fanoutExchange, "", notification);
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ Notifications message sending to {} exchange, with id: {}",
+                fanoutExchange, correlationData.getId());
+        rabbitTemplate.convertAndSend(fanoutExchange, "", notification, correlationData);
     }
 
     //  TOPIC
     public void sendUserSignup(@Valid UserEventDTO userEvent){
-        log.info("✅ User Event message has been sent to {} exchange", topicExchange);
-        rabbitTemplate.convertAndSend(topicExchange, userSignup, userEvent);
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ User Event message sending to {} exchange, with id: {}",
+                topicExchange, correlationData.getId());
+        rabbitTemplate.convertAndSend(topicExchange, userSignup, userEvent, correlationData);
     }
 
     public void sendUserLogin(@Valid UserEventDTO userEvent){
-        log.info("✅ User SignUp message has been sent to {} exchange", topicExchange);
-        rabbitTemplate.convertAndSend(topicExchange, userLogin, userEvent);
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ User SignUp message sending to {} exchange, with id: {}",
+                topicExchange, correlationData.getId());
+        rabbitTemplate.convertAndSend(topicExchange, userLogin, userEvent, correlationData);
     }
 
     public void sendSystemError(@Valid SystemEventDTO systemEvent){
-        log.info("✅ User System Error message has been sent to {} exchange", topicExchange);
-        rabbitTemplate.convertAndSend(topicExchange, systemError, systemEvent);
+        CorrelationData correlationData = createCorrelationData();
+
+        log.info("✅ User System Error message sending to {} exchange, with id: {}",
+                topicExchange, correlationData.getId());
+        rabbitTemplate.convertAndSend(topicExchange, systemError, systemEvent, correlationData);
     }
 
     public void sendPriorityMessage(@Valid PriorityMessageDTO priorityMessage, String priority) {
+        CorrelationData correlationData = createCorrelationData();
+
         rabbitTemplate.convertAndSend(headersExchange, "",  priorityMessage,
                 message -> {
                     message.getMessageProperties().setHeader("priority", priority);
-                    log.info("✅ {} Priority Message message has been sent to {}", priority, headersExchange);
+                    log.info("✅ {} Priority message message sending to {}, with id: {}",
+                            priority, headersExchange, correlationData.getId());
                     return message;
-                });
+                }, correlationData);
     }
 
-//    public void sendMediumPriorityMessage(@Valid PriorityMessageDTO priorityMessage, boolean urgent) {
-//        rabbitTemplate.convertAndSend(headersExchange,"", priorityMessage,
-//                message -> {
-//                    message.getMessageProperties().setHeader("priority", "medium");
-//                    message.getMessageProperties().setHeader("urgent", urgent);
-//                    log.info("✅ Medium Priority Message message has been sent to {}", headersExchange);
-//                    return message;
-//                }
-//        );
-//    }
+    private CorrelationData createCorrelationData() {
+        return new CorrelationData(UUID.randomUUID().toString());
+    }
 }
