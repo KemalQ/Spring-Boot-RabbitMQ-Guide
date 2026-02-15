@@ -7,9 +7,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/topic")
 public class TopicController {
     private final RabbitMessagePublisher messageSender;
 
@@ -18,19 +20,19 @@ public class TopicController {
         this.messageSender = messageSender;
     }
 
-    @PostMapping("/topic/user/signup")
+    @PostMapping("/user/signup")
     public ResponseEntity<Void> sendUserSignup(@Valid @RequestBody UserEventDTO userEvent){
         messageSender.sendUserSignup(userEvent);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/topic/user/login")
+    @PostMapping("/user/login")
     public ResponseEntity<Void> sendUserLogin(@Valid @RequestBody UserEventDTO userEvent){
         messageSender.sendUserLogin(userEvent);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/topic/error")
+    @PostMapping("/error")
     public ResponseEntity<Void> sendSystemError(@Valid @RequestBody SystemEventDTO systemEvent){
         messageSender.sendSystemError(systemEvent);
         return ResponseEntity.ok().build();

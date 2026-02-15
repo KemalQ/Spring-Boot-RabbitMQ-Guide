@@ -6,9 +6,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/fanout")
 public class FanoutController {
     private RabbitMessagePublisher messageSender;
 
@@ -16,7 +18,7 @@ public class FanoutController {
         this.messageSender = messageSender;
     }
 
-    @PostMapping("/fanout/notify")
+    @PostMapping("/notify")
     public ResponseEntity<Void> sendNotification(@Valid @RequestBody NotificationDTO notification){
         messageSender.sendFanoutNotification(notification);
         return ResponseEntity.ok().build();

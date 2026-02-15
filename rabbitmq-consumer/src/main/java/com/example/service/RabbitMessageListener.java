@@ -188,7 +188,7 @@ public class RabbitMessageListener {
     public void consumeHighPriorityMessage(PriorityMessageDTO message) {
         try{
             messageValidator.validatePriorityMessage(message);
-            log.info("🔴 priority.high.queue message: {}", message);
+            log.info("✅ priority.high.queue message: {}", message);
             // ***
 
         }catch (IllegalArgumentException e) {
@@ -207,7 +207,7 @@ public class RabbitMessageListener {
     public void consumeLowPriorityMessage(PriorityMessageDTO message) {
         try{
             messageValidator.validatePriorityMessage(message);
-            log.info("🟢 priority.low.queue message: {}", message);
+            log.info("✅ priority.low.queue message: {}", message);
             // ***
         }catch (IllegalArgumentException e) {
             log.error("❌ Failed to process low priority message: {}", message, e);
