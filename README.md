@@ -149,25 +149,25 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 
 ## 🛠️ Technologies
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Java** | 17 | Programming Language |
-| **Spring Boot** | 3.2.x | Application Framework |
-| **Spring AMQP** | 3.1.x | RabbitMQ Integration |
+| Technology | Version        | Purpose |
+|------------|----------------|---------|
+| **Java** | 21             | Programming Language |
+| **Spring Boot** | 3.2.x          | Application Framework |
+| **Spring AMQP** | 3.1.x          | RabbitMQ Integration |
 | **RabbitMQ** | 4.1-management | Message Broker |
-| **Jackson** | 2.15.x | JSON Serialization |
-| **Lombok** | 1.18.x | Boilerplate Reduction |
-| **Jakarta Validation** | 3.0.x | Bean Validation |
-| **Docker** | 24.x | Containerization |
-| **Maven** | 3.9.x | Build Tool |
+| **Jackson** | 2.15.x         | JSON Serialization |
+| **Lombok** | 1.18.x         | Boilerplate Reduction |
+| **Jakarta Validation** | 3.0.x          | Bean Validation |
+| **Docker** | 24.x           | Containerization |
+| **Maven** | 3.9.x          | Build Tool |
 
 ---
 
 ## 📦 Prerequisites
 
-- **Java 17** or higher
+- **Java 21** or higher
 - **Maven 3.9+**
-- **Docker** and **Docker Compose** (for RabbitMQ)
+- **Docker** and **Docker Compose**
 - **Git**
 
 ---

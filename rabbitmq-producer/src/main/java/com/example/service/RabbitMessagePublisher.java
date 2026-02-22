@@ -16,6 +16,7 @@ import java.util.UUID;
 @Validated
 public class RabbitMessagePublisher {
     private final RabbitTemplate rabbitTemplate;
+
     private final String directExchange;
     private final String fanoutExchange;
     private final String topicExchange;
