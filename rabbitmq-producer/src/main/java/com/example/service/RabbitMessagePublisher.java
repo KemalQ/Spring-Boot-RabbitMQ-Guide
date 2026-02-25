@@ -37,8 +37,8 @@ public class RabbitMessagePublisher {
     private String systemError;
 
     //HEADERS
-//    @Value("${priority.high.queue}")
-//    private String priorityHighQueue;
+    @Value("${priority.high.queue}")
+    private String priorityHighQueue;
 
 
     public RabbitMessagePublisher(RabbitTemplate rabbitTemplate,
