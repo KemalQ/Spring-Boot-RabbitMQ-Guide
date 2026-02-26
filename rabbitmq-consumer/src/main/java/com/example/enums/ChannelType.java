@@ -6,9 +6,6 @@ public enum ChannelType {
     PUSH,
     NOTIFICATION,
 
-    SIGNUP,
-    LOGIN,
-
     LOW,
     HIGH
 }

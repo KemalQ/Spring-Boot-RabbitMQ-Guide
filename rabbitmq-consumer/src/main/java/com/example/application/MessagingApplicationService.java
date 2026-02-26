@@ -1,7 +1,8 @@
-package com.example.service;
+package com.example.application;
 
 import com.example.dto.*;
 import com.example.enums.ChannelType;
+import com.example.enums.UserEventType;
 
 public interface MessagingApplicationService {
     // DIRECT EXCHANGE
@@ -9,7 +10,7 @@ public interface MessagingApplicationService {
     void handleNotification(NotificationDTO notification, ChannelType channelType);
 
     // TOPIC EXCHANGE
-    void handleUserEvent(UserEventDTO userEvent, ChannelType channelType);
+    void handleUserEvent(UserEventDTO userEvent, UserEventType channelType);
     void handleSystemErrorMessage(SystemEventDTO systemEvent);
 
 

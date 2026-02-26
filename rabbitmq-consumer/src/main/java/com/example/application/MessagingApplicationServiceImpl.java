@@ -1,9 +1,13 @@
-package com.example.service.impl;
+package com.example.application;
 
 import com.example.configuration.MessageValidator;
 import com.example.dto.*;
 import com.example.enums.ChannelType;
-import com.example.service.MessagingApplicationService;
+import com.example.enums.UserEventType;
+import com.example.handler.notification.NotificationHandler;
+import com.example.handler.notification.NotificationHandlerRegistry;
+import com.example.handler.userEvent.UserEventHandler;
+import com.example.handler.userEvent.UserEventHandlerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +15,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessagingApplicationServiceImpl implements MessagingApplicationService {
     private final MessageValidator messageValidator;
+    private final NotificationHandlerRegistry registry;
+    private final UserEventHandlerRegistry eventHandlerRegistry;
 
-    public MessagingApplicationServiceImpl(MessageValidator messageValidator) {
+    public MessagingApplicationServiceImpl(MessageValidator messageValidator, NotificationHandlerRegistry registry, UserEventHandlerRegistry eventHandlerRegistry) {
         this.messageValidator = messageValidator;
+        this.registry = registry;
+        this.eventHandlerRegistry = eventHandlerRegistry;
     }
 
 
@@ -22,48 +30,39 @@ public class MessagingApplicationServiceImpl implements MessagingApplicationServ
         messageValidator.validateOrder(order);
 
         log.info("✅ orders.queue message: product={}, quantity={}", order.getProduct(), order.getQuantity());
-
         // ***
     }
 
     @Override
     public void handleNotification(NotificationDTO notification, ChannelType channelType) {
+
+        /// Strategy pattern
+
         messageValidator.validateNotification(notification);
 
-        if (channelType == ChannelType.NOTIFICATION){
-            log.info("✅ notification.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
-            // *** processNotification(notification);
+        NotificationHandler handler = registry.get(channelType);
+
+        if (handler == null){
+            throw new IllegalArgumentException("Unsupported channel type: " + channelType);
         }
-        if (channelType == ChannelType.EMAIL){
-            log.info("✅ email.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
-            // *** processEmailNotification
-        }
-        if (channelType == ChannelType.PUSH){
-            log.info("✅ push.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
-            // *** processPushNotification
-        }
-        if (channelType == ChannelType.SMS){
-            log.info("✅ sms.queue message: userId={}, notification={}", notification.getUserId(), notification.getMessage());
-            // *** processSmsNotification
-        }
+
+        handler.handleNotification(notification);
+
     }
 
     @Override
-    public void handleUserEvent(UserEventDTO userEvent, ChannelType channelType) {
+    public void handleUserEvent(UserEventDTO userEvent, UserEventType eventType) {
+
+        /// Strategy pattern
+
         messageValidator.validateUserEvent(userEvent);
 
-        if (channelType == ChannelType.LOGIN){
-            log.info("✅ user.login.queue message: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
-                    userEvent.getEventType(), userEvent.getUserId(), userEvent.getUsername(),
-                    userEvent.getEmail(), userEvent.getOccurredAt(), userEvent.getIpAddress());
-            // *** processUserLogin(userEvent);
+        UserEventHandler handler = eventHandlerRegistry.get(eventType);
+
+        if (handler == null){
+            throw new IllegalArgumentException("Unsupported channel type: " + eventType);
         }
-        if (channelType == ChannelType.SIGNUP){
-            log.info("✅ user.signup.queue message: eventType={}, userId={}, username={}, email={}, timestamp={}, ipAddress={}",
-                    userEvent.getEventType(), userEvent.getUserId(), userEvent.getUsername(),
-                    userEvent.getEmail(), userEvent.getOccurredAt(), userEvent.getIpAddress());
-            // *** processUserSignup(userEvent);
-        }
+        handler.handleUserEvent(userEvent);
 
     }
 
