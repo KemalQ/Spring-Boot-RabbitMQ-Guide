@@ -1,13 +1,14 @@
 services:
-  rabbitmq-guide:  #Service name
+  rabbitmq-broker:  #Service name
     image: rabbitmq:4.1-management
-    container_name: rabbitmq-guide
+    container_name: rabbitmq-broker
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"   #AMQP protocol
+      - "15672:15672" #Management UI
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: guest #admin
+      RABBITMQ_DEFAULT_PASS: guest #admin
+      RABBITMQ_DEFAULT_VHOST: /
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
@@ -16,33 +17,36 @@ services:
       start_period: 30s
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
 
   rabbitmq-producer:
     build: ./rabbitmq-producer
     container_name: rabbitmq-producer
     depends_on:
-      rabbitmq-guide:
+      rabbitmq-broker:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8080:8080" # REST API(entry point only)
+      - "9080:9080" # Actuator
     environment:
-      SPRING_RABBITMQ_HOST: rabbitmq-guide
+      SPRING_RABBITMQ_HOST: rabbitmq-broker
       SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin
+      SPRING_RABBITMQ_USERNAME: guest  #admin
+      SPRING_RABBITMQ_PASSWORD: guest  #admin
 
   rabbitmq-consumer:
     build: ./rabbitmq-consumer
     container_name: rabbitmq-consumer
     depends_on:
-      rabbitmq-guide:
+      rabbitmq-broker:
         condition: service_healthy
     ports:
-      - "8081:8081"
+      - "8081:8081" # REST API(entry point only)
+      - "9081:9081" # Actuator
     environment:
-      SPRING_RABBITMQ_HOST: rabbitmq-guide
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin
+      SPRING_RABBITMQ_HOST: rabbitmq-broker
+      SPRING_RABBITMQ_USERNAME: guest  #admin
+      SPRING_RABBITMQ_PASSWORD: guest  #admin
 
 volumes:
   rabbitmq_data:

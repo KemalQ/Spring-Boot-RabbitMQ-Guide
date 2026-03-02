@@ -152,7 +152,7 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 | Technology | Version        | Purpose |
 |------------|----------------|---------|
 | **Java** | 21             | Programming Language |
-| **Spring Boot** | 3.2.x          | Application Framework |
+| **Spring Boot** | 3.5.5          | Application Framework |
 | **Spring AMQP** | 3.1.x          | RabbitMQ Integration |
 | **RabbitMQ** | 4.1-management | Message Broker |
 | **Jackson** | 2.15.x         | JSON Serialization |
@@ -177,7 +177,7 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Spring-Boot-RabbitMQ-Guide.git
+git clone https://github.com/KemalQ/Spring-Boot-RabbitMQ-Guide.git
 cd Spring-Boot-RabbitMQ-Guide
 ```
 
