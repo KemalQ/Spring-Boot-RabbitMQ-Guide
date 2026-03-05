@@ -44,77 +44,89 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 
 ## 🏗️ Architecture
 
+### Producer Architecture
+
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              CLIENT REQUESTS                             │
-└──────────────────────────────┬──────────────────────────────────────────┘
-                               │
-                               ↓
-        ┌──────────────────────────────────────────────┐
-        │     PRODUCER MICROSERVICE (Port 8080)        │
-        │  ┌────────────────────────────────────────┐  │
-        │  │  REST Controllers                      │  │
-        │  │  • DirectController                    │  │
-        │  │  • FanoutController                    │  │
-        │  │  • TopicController                     │  │
-        │  │  • HeadersController                   │  │
-        │  └──────────────┬─────────────────────────┘  │
-        │                 │                            │
-        │  ┌──────────────▼─────────────────────────┐  │
-        │  │  RabbitMessagePublisher                │  │
-        │  │  • CorrelationData tracking            │  │
-        │  │  • DTO validation (@Valid)             │  │
-        │  └──────────────┬─────────────────────────┘  │
-        └─────────────────┼──────────────────────────┘
-                          │
-                          │ Publisher Confirms
-                          │ Publisher Returns
-                          ↓
-        ┌──────────────────────────────────────────────┐
-        │         RABBITMQ BROKER (Port 5672)          │
-        │  ┌────────────────────────────────────────┐  │
-        │  │  EXCHANGES                             │  │
-        │  │  • direct.exchange   (1:1 routing)     │  │
-        │  │  • fanout.exchange   (broadcast)       │  │
-        │  │  • topic.exchange    (pattern routing) │  │
-        │  │  • headers.exchange  (header routing)  │  │
-        │  └──────────────┬─────────────────────────┘  │
-        │                 │                            │
-        │  ┌──────────────▼─────────────────────────┐  │
-        │  │  QUEUES (Durable, Persistent)          │  │
-        │  │  • orders.queue                        │  │
-        │  │  • notification.queue                  │  │
-        │  │  • email.queue, sms.queue, push.queue  │  │
-        │  │  • user.signup.queue, user.login.queue │  │
-        │  │  • system.error.queue                  │  │
-        │  │  • priority.high.queue, priority.low   │  │
-        │  └──────────────┬─────────────────────────┘  │
-        └─────────────────┼──────────────────────────┘
-                          │
-                          │ Message Delivery
-                          ↓
-        ┌──────────────────────────────────────────────┐
-        │     CONSUMER MICROSERVICE (Port 8081)        │
-        │  ┌────────────────────────────────────────┐  │
-        │  │  RabbitMessageListener                 │  │
-        │  │  • @RabbitListener for each queue      │  │
-        │  │  • Concurrent processing (2-5 threads) │  │
-        │  └──────────────┬─────────────────────────┘  │
-        │                 │                            │
-        │  ┌──────────────▼─────────────────────────┐  │
-        │  │  MessageValidator                      │  │
-        │  │  • Jakarta Validation                  │  │
-        │  │  • Custom constraint validation        │  │
-        │  └──────────────┬─────────────────────────┘  │
-        │                 │                            │
-        │  ┌──────────────▼─────────────────────────┐  │
-        │  │  Business Logic Processing             │  │
-        │  │  • Order processing                    │  │
-        │  │  • Notification handling               │  │
-        │  │  • Event processing                    │  │
-        │  └────────────────────────────────────────┘  │
-        └──────────────────────────────────────────────┘
+         ┌─────────────────────────────────────────────────┐
+         │           HTTP Request (REST API)               │
+         └──────────────────┬──────────────────────────────┘
+                            │
+                            ↓
+              ┌─────────────────────────────────┐
+              │  Controllers (Thin Layer)       │
+              │  • DirectController             │
+              │  • FanoutController             │
+              │  • TopicController              │
+              │  • HeadersController            │
+              └────────────┬────────────────────┘
+                           │
+                           ↓
+              ┌─────────────────────────────────┐
+              │  RabbitMessagePublisher         │
+              │  • CorrelationData tracking     │
+              │  • Jakarta Validation (@Valid)  │
+              │  • Publisher Confirms callback  │
+              └────────────┬────────────────────┘
+                           │
+                           ↓
+                     [ RabbitMQ Broker ]
 ```
+
+### Consumer Architecture (Clean + Strategy Pattern)
+
+```
+         ┌─────────────────────────────────────────────────┐
+         │             RabbitMQ Broker                     │
+         └──────────────────┬──────────────────────────────┘
+                            │
+                            ↓
+              ┌─────────────────────────────────┐
+              │  RabbitMessageListener          │
+              │  (Thin Layer)                   │
+              │  • Exception wrapping only      │
+              │  • IllegalArgumentException →   │
+              │    AmqpRejectAndDontRequeue     │
+              └────────────┬────────────────────┘
+                           │
+                           ↓
+              ┌─────────────────────────────────┐
+              │  MessagingApplicationService    │
+              │  (Coordination Layer)           │
+              │  • MessageValidator             │
+              │  • Strategy routing             │
+              │  • Handler delegation           │
+              └────────┬───────────┬────────────┘
+                       │           │
+                       ↓           ↓
+             ┌──────────────┐  ┌──────────────┐
+             │   Registry   │  │ Simple       │
+             │   (Strategy) │  │ Handlers     │
+             └──────┬───────┘  └──────┬───────┘
+                    │                 │
+                    ↓                 ↓
+             ┌──────────────┐  ┌──────────────┐
+             │ Notification │  │ • Order      │
+             │ Handlers:    │  │ • SystemEvent│
+             │ • Email      │  │ • Priority   │
+             │ • SMS        │  │   (if-else)  │
+             │ • Push       │  └──────────────┘
+             │ • Generic    │
+             └──────────────┘
+             
+             ┌──────────────┐
+             │ UserEvent    │
+             │ Handlers:    │
+             │ • Signup     │
+             │ • Login      │
+             └──────────────┘
+```
+### Why Layered?
+
+- **Strategy Pattern** - 4 notification channels (EMAIL/SMS/PUSH/NOTIFICATION) routed via Registry
+- **Validation** - MessageValidator ensures data integrity before processing
+- **Extensibility** - New handlers added without modifying existing code
+- **DLQ Strategy** - Validation errors rejected, transient errors can retry
+
 
 ---
 
@@ -123,6 +135,7 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 ### Core Functionality
 
 🎯 **4 Exchange Patterns** - Complete implementation of all RabbitMQ exchange types  
+🏗️ **Clean Architecture** - Layered design with Strategy Pattern for extensibility
 🔄 **Asynchronous Processing** - Non-blocking message-driven architecture  
 📦 **Multiple Message Types** - Orders, Notifications, User Events, System Events, Priority Messages  
 🎨 **Pattern-Based Routing** - Wildcard routing with Topic Exchange (`user.signup.*`, `system.error.#`)  
@@ -133,10 +146,16 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 ✅ **Publisher Confirms** - Broker acknowledges message receipt with CorrelationData tracking  
 🔄 **Publisher Returns** - Automatic detection and logging of unroutable messages  
 🛡️ **Input Validation** - Jakarta Bean Validation on all DTOs (`@NotNull`, `@NotBlank`, `@Min`)  
-🎭 **Exception Handling** - `AmqpRejectAndDontRequeueException` for poison messages  
-📊 **Concurrent Consumers** - Configurable consumer threads (2-5) with prefetch control  
-💊 **Health Monitoring** - Custom RabbitMQ health indicators with Actuator  
+🎭 **Exception Handling** - `AmqpRejectAndDontRequeueException` for Dead Letter Queue 
+📊 **Concurrent Consumers** - Configurable consumer threads (2-5) with prefetch control(10)
+💊 **Health Monitoring** - Spring Actuator endpoints  
 🐳 **Docker Orchestration** - Complete docker-compose with health checks and dependencies
+
+### Design Patterns
+🎨 **Strategy Pattern** - Registry-based handler selection for multi-channel routing
+🏗️ **Clean Architecture** - Separation of concerns (Listener → Service → Handlers)
+🔧 **Dependency Injection** - Constructor injection with interfaces
+📝 **Builder Pattern** - DTO construction with validation
 
 ### Message Flow Control
 
@@ -149,17 +168,20 @@ This project demonstrates a **microservices architecture** using **Spring Boot**
 
 ## 🛠️ Technologies
 
-| Technology | Version        | Purpose |
-|------------|----------------|---------|
-| **Java** | 21             | Programming Language |
-| **Spring Boot** | 3.5.5          | Application Framework |
-| **Spring AMQP** | 3.1.x          | RabbitMQ Integration |
-| **RabbitMQ** | 4.1-management | Message Broker |
-| **Jackson** | 2.15.x         | JSON Serialization |
-| **Lombok** | 1.18.x         | Boilerplate Reduction |
+| Technology             | Version        | Purpose |
+|------------------------|----------------|---------|
+| **Java**               | 21             | Programming Language |
+| **Spring Boot**        | 3.5.5          | Application Framework |
+| **Spring AMQP**        | 3.1.x          | RabbitMQ Integration |
+| **RabbitMQ**           | 4.1-management | Message Broker |
+| **JUnit**              | 5.10.x         | Testing Framework |
+| **Mockito**            | 5.x         | Mocking Framework|
+| **AssertJ**            | 3.x        | Fluent Assertions |
+| **Jackson**            | 2.15.x         | JSON Serialization |
+| **Lombok**             | 1.18.x         | Boilerplate Reduction |
 | **Jakarta Validation** | 3.0.x          | Bean Validation |
-| **Docker** | 24.x           | Containerization |
-| **Maven** | 3.9.x          | Build Tool |
+| **Docker**             | 24.x           | Containerization |
+| **Maven**              | 3.9.x          | Build Tool |
 
 ---
 
@@ -184,7 +206,14 @@ cd Spring-Boot-RabbitMQ-Guide
 ### 2. Start RabbitMQ with Docker Compose
 
 ```bash
+# Start all services (RabbitMQ + Producer + Consumer)
 docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
 ```
 
 **RabbitMQ Management UI:** http://localhost:15672  
@@ -254,7 +283,7 @@ curl -X POST "http://localhost:8080/direct/sendOrder" \
   }'
 
 # Send Notification
-curl -X POST "http://localhost:8080/direct/notification" \
+curl -X POST "http://localhost:8080/direct/sendNotification" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": 123,
@@ -278,7 +307,7 @@ direct.exchange
 **Example:**
 ```bash
 # Broadcast notification to email, SMS, and push notifications
-curl -X POST "http://localhost:8080/fanout/notification" \
+curl -X POST "http://localhost:8080/fanout/notify" \
   -H "Content-Type: application/json" \
   -d '{
     "userId": 456,
@@ -316,7 +345,7 @@ curl -X POST "http://localhost:8080/topic/user/signup" \
   }'
 
 # System Error Event
-curl -X POST "http://localhost:8080/topic/system/error" \
+curl -X POST "http://localhost:8080/topic/error" \
   -H "Content-Type: application/json" \
   -d '{
     "component": "payment-service",
@@ -443,10 +472,10 @@ headers.exchange
 
 ### Consumer Health Check (Port 8081)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/actuator/health` | RabbitMQ connection health status |
-| `GET` | `/actuator/info` | Application information |
+| Method | Endpoint                     | Description |
+|--------|------------------------------|-------------|
+| `GET` | `9080(9081)/actuator/health` | RabbitMQ connection health status |
+| `GET` | `/actuator/info`             | Application information |
 
 ---
 
@@ -460,28 +489,65 @@ headers.exchange
 # Server
 server.port=8080
 
-# RabbitMQ Connection
+management.server.port=9080
+
 spring.rabbitmq.host=localhost
 spring.rabbitmq.port=5672
 spring.rabbitmq.username=guest
 spring.rabbitmq.password=guest
 
-# Publisher Confirms & Returns
+# ACTUATOR ENDPOINTS
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+
+info.app.name=Spring-Boot-RabbitMQ-Guide
+info.app.version=0.0.1-SNAPSHOT
+info.app.git.commit=abc123
+
+# CONFIRMATION-RETURN
 spring.rabbitmq.publisher-confirm-type=correlated
 spring.rabbitmq.publisher-returns=true
 spring.rabbitmq.template.mandatory=true
 
-# Exchanges
-direct.exchange=direct.exchange
-fanout.exchange=fanout.exchange
-topic.exchange=topic.exchange
+
+# Direct
+direct.exchange = direct.exchange
+
+# Direct Exchange Queue
+orders.queue = orders.queue
+orders.route = orders.route
+
+# Routing Keys
+notification.queue = notification.queue
+notification.route = notification.route
+
+# Fanout
+fanout.exchange = fanout.exchange
+
+# Fanout Exchange Queue
+email.queue = email.queue
+sms.queue = sms.queue
+push.queue = push.queue
+
+# Topic
+topic.exchange = topic.exchange
+
+# Topic Exchange Queue
+user.signup.queue = user.signup.queue
+user.login.queue = user.login.queue
+system.error.queue = system.error.queue
+
+# Topic Routing Keys
+user.signup.route=user.signup.route
+user.login.route=user.login.route
+system.error.route=system.error.route
+
+# Headers
 headers.exchange=headers.exchange
 
-# Queues & Routing Keys
-orders.queue=orders.queue
-orders.route=orders.route
-notification.queue=notification.queue
-notification.route=notification.route
+# Headers Priority Exchange Queue
+priority.high.queue = priority.high.queue
+priority.low.queue = priority.low.queue
 ```
 
 ### Consumer Configuration
@@ -492,21 +558,49 @@ notification.route=notification.route
 # Server
 server.port=8081
 
-# RabbitMQ Connection
+management.server.port=9081
+
 spring.rabbitmq.host=localhost
-spring.rabbitmq.port=5672
+spring.rabbitmq.port = 5672
 spring.rabbitmq.username=guest
 spring.rabbitmq.password=guest
 
-# Consumer Settings
+# ACTUATOR ENDPOINTS
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+
+info.app.name=Spring-Boot-RabbitMQ-Guide
+info.app.version=0.0.1-SNAPSHOT
+info.app.git.commit=abc123
+
+# Direct
+orders.queue = orders.queue
+orders.route = orders.route
+notification.queue = notification.queue
+notification.route = notification.route
+
+# Fanout
+email.queue = email.queue
+sms.queue = sms.queue
+push.queue = push.queue
+
+# Topic
+user.signup.queue = user.signup.queue
+user.login.queue = user.login.queue
+system.error.queue = system.error.queue
+
+# Headers
+headers.exchange=headers.exchange
+
+# Headers Priority Exchange Queue
+priority.high.queue=priority.high.queue
+priority.low.queue=priority.low.queue
+
+# Consumer settings
 spring.rabbitmq.listener.simple.concurrency=2
 spring.rabbitmq.listener.simple.max-concurrency=5
 spring.rabbitmq.listener.simple.prefetch=10
 spring.rabbitmq.listener.simple.default-requeue-rejected=false
-
-# Actuator
-management.endpoints.web.exposure.include=health,info
-management.endpoint.health.show-details=always
 ```
 
 ---
@@ -534,10 +628,21 @@ try {
 } catch (IllegalArgumentException e) {
     // Validation error → DON'T retry
     throw new AmqpRejectAndDontRequeueException("Invalid payload", e);
-} catch (Exception e) {
-    // Infrastructure error → CAN retry
-    throw e;
 }
+```
+
+### Layered + Strategy
+
+- **Multiple responsibilities:** validation, routing, processing
+- **4+ notification channels** → Strategy Pattern needed
+- **Clean Architecture** for extensibility
+
+```java
+NotificationHandler handler = registry.get(channelType);
+if (handler == null) {
+    throw new IllegalArgumentException("Unsupported channel");
+}
+handler.handleNotification(notification);
 ```
 
 ### Validation
@@ -595,6 +700,46 @@ See [Exchange Types](#-exchange-types) section for all cURL examples.
    ```
    ✅ orders.queue message: product=Laptop, quantity=2
    ```
+## 🧪 Testing
+
+### Test Coverage
+
+```
+Producer Module:
+├── RabbitMessagePublisherTest ........... 15 tests
+└── Coverage: 100% of critical paths
+
+Consumer Module:
+├── MessagingApplicationServiceTest ...... 19 tests
+│   ├── Order handling (2)
+│   ├── Notification Strategy (6) - EMAIL/SMS/PUSH/NOTIFICATION
+│   ├── UserEvent Strategy (4) - SIGNUP/LOGIN
+│   ├── SystemError handling (2)
+│   ├── Priority handling (3)
+│   └── Integration tests (2)
+│
+├── RabbitMessageListenerTest ............ 21 tests
+│   ├── Direct Exchange (4)
+│   ├── Fanout Exchange (8)
+│   ├── Topic Exchange (6)
+│   ├── Headers Exchange (4)
+│   └── Exception wrapping (1)
+│
+└── Coverage: 100% of critical paths
+```
+Total: 55+ unit tests | 100% coverage
+
+### Running Tests
+```
+cd rabbitmq-producer && mvn test
+cd rabbitmq-consumer && mvn test
+```
+
+#### Run specific test class
+```
+mvn test -Dtest=RabbitMessagePublisherTest
+mvn test -Dtest=MessagingApplicationServiceTest
+```
 
 ### Test Validation
 
@@ -625,39 +770,68 @@ Spring-Boot-RabbitMQ-Guide/
 │
 ├── rabbitmq-producer/             # Producer Microservice (Port 8080)
 │   ├── src/main/java/com/example/
-│   │   ├── configuration/
+│   │   ├── configuration/                       # RabbitMQ configs
 │   │   │   ├── DirectExchangeConfig.java
 │   │   │   ├── FanoutExchangeConfig.java
 │   │   │   ├── TopicExchangeConfig.java
 │   │   │   ├── HeaderExchangeConfig.java
 │   │   │   ├── RabbitConfiguration.java         # Publisher Confirms/Returns
 │   │   │   └── RabbitInfrastructureInitializer.java
-│   │   ├── controller/
+│   │   ├── controller/                          # REST endpoints
 │   │   │   ├── DirectController.java
 │   │   │   ├── FanoutController.java
 │   │   │   ├── TopicController.java
 │   │   │   └── HeadersController.java
-│   │   ├── dto/
+│   │   ├── dto/                                 # Data Transfer Objects
 │   │   │   ├── OrderDTO.java
 │   │   │   ├── NotificationDTO.java
 │   │   │   ├── UserEventDTO.java
 │   │   │   ├── SystemEventDTO.java
 │   │   │   └── PriorityMessageDTO.java
-│   │   └── service/
+│   │   └── service/                             # RabbitMessagePublisher
 │   │       └── RabbitMessagePublisher.java      # CorrelationData tracking
 │   └── src/main/resources/
-│       └── application.properties
+│   │    └── application.properties
+│   │
+│   └── src/test/java/com/example/servie/
+│       └── RabbitMessagePublisherTest.java
 │
 └── rabbitmq-consumer/             # Consumer Microservice (Port 8081)
     ├── src/main/java/com/example/
+    │   ├── application
+    │   │   └── MessagingApplicationServiceImpl.java
     │   ├── configuration/
     │   │   ├── MessageValidator.java            # Jakarta Validation
-    │   │   ├── RabbitConfiguration.java         # Consumer settings
+    │   │   └── RabbitConfiguration.java         # Consumer settings
     │   ├── dto/                                 # Same DTOs as Producer
-    │   └── service/
+    │   ├── enums/
+    │   │   ├── ChannelType.java
+    │   │   └── UserEventType.java 
+    │   ├── handler/
+    │   │   ├── notification
+    │   │   │    ├── NotificationHandlerRegistry.java
+    │   │   │    ├── NotificationHandler.java
+    │   │   │    ├── EmailHandlerImpl.java
+    │   │   │    ├── NotificationHandlerImpl.java
+    │   │   │    ├── PushHandlerImpl.java
+    │   │   │    └── SmsHandlerImpl.java
+    │   │   └──userEvent
+    │   │   │    ├── UserEventHandlerRegistry.java
+    │   │   │    ├── UserEventHandler.java
+    │   │   │    ├── LoginUserEventHandlerImpl.java
+    │   │   │    └── SignupUserEventHandlerImpl.java
+    │   └── listener/
     │       └── RabbitMessageListener.java       # @RabbitListener methods
     └── src/main/resources/
-        └── application.properties
+    │   └── application.properties
+    │
+    └── src/test/java/com/example/listener/
+        └── listener
+            └── RabbitMessageListenerTest.java
+        └── application
+            └── MessagingApplicationServiceImplTest.java
+    
+
 ```
 
 ---
